@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Form</title>
+    <!-- Include Vue.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+
+<div id="app">
+    <h2>Registration Form</h2>
+    <form th:action="@{#}" @submit.prevent="updateProfile">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" v-model="name" required>
+        </div>
+        <div>
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" v-model="phone" required>
+        </div>
+<!--        <input id="tk" type="hidden"-->
+<!--               th:name="${_csrf.parameterName}"-->
+<!--               th:value="${_csrf.token}" />-->
+        <div>
+            <button type="submit">Submit</button>
+        </div>
+    </form>
+    <p v-if="hasError">Update failed, please check your input!</p>
+    <p v-if="redirecting">Updated, redirecting to home page...</p>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            name: '',
+            phone: '',
+            hasError: false,
+            redirecting: false
+        },
+        methods: {
+            updateProfile: function() {
+                fetch("/api/updateProfile", {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "name": this.name,
+                        "phoneNum": this.phone,
+                        // "_csrf": document.getElementById("tk").value
+                    })
+                }).then(resp => {
+                    console.log(resp);
+                    if (!resp.ok) {
+                        this.hasError = true;
+                        throw new Error("error on backend, invalid input?");
+                    }
+                    return resp.json();
+                }).then(data => {
+                    console.log(data);
+                    if (data.status !== 0) {
+                        this.hasError = true;
+                        return;
+                    }
+                    this.hasError = false;
+                    this.redirecting = true;
+                    setTimeout(() => {
+                        window.location = "/dashboard";
+                    }, 1000);
+                });
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

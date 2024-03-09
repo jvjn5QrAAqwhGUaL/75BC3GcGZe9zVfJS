@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+
+<head>
+    <title th:text="${title}"/>
+    <!-- Include Vue.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+<h1>Welcome to <span th:text="${title}"/></h1>
+
+<p>You're now logged in as <span th:text="${name}"/>. <a href="/logout">Logout</a></p>
+<br>
+<br>
+<br>
+<div id="app">
+    <p th:if="${borrowed.iterator().hasNext()}">You borrowed:</p>
+    <table th:if="${borrowed.iterator().hasNext()}">
+        <thead>
+        <tr>
+            <td>Book No.</td>
+            <td></td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="log : ${borrowed}">
+            <td th:text="${log.getInventoryId()}"></td>
+            <td><a href="#" @click="returnBook">Return</a></td>
+        </tr>
+        </tbody>
+    </table>
+    <p>Books:</p>
+    <table style="border: 1px black;">
+        <thead>
+        <tr>
+            <td>ISBN</td>
+            <td>Name</td>
+            <td>Author</td>
+            <td>Intro</td>
+            <td></td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="book : ${books}">
+            <td th:text="${book.getIsbn()}"/>
+            <td th:text="${book.getName()}"/>
+            <td th:text="${book.getAuthor()}"/>
+            <td th:text="${book.getIntro()}"/>
+            <td><a href="#" @click="borrow">Borrow</a></td>
+        </tr>
+        </tbody>
+    </table>
+    <p v-if="hasErrorOnBorrowing">Borrow failed, all copies borrowed.</p>
+    <p v-if="hasErrorOnReturning">Return failed, please try again later.</p>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            name: '',
+            phone: '',
+            hasErrorOnBorrowing: false,
+            hasErrorOnReturning: false
+        },
+        methods: {
+            borrow: function (evt) {
+                let isbn = evt.target.parentElement.parentElement.firstChild.innerHTML;
+                fetch("/api/borrow", {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "isbn": isbn
+                    })
+                }).then(resp => {
+                    console.log(resp);
+                    if (!resp.ok) {
+                        this.hasErrorOnBorrowing = true;
+                        throw new Error("error on backend, invalid input?");
+                    }
+                    return resp.json();
+                }).then(data => {
+                    console.log(data);
+                    if (data.status !== 0) {
+                        this.hasErrorOnBorrowing = true;
+                        return;
+                    }
+                    this.hasErrorOnBorrowing = false;
+                    window.location.reload();
+                });
+            },
+            returnBook: function (evt) {
+                let id = evt.target.parentElement.parentElement.firstChild.innerHTML;
+                console.log("returning", id);
+                fetch("/api/return", {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "inventoryId": id
+                    })
+                }).then(resp => {
+                    console.log(resp);
+                    if (!resp.ok) {
+                        this.hasErrorOnReturning = true;
+                        throw new Error("error on backend, invalid input?");
+                    }
+                    return resp.json();
+                }).then(data => {
+                    console.log(data);
+                    if (data.status !== 0) {
+                        this.hasErrorOnReturning = true;
+                        return;
+                    }
+                    this.hasErrorOnReturning = false;
+                    window.location.reload();
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>

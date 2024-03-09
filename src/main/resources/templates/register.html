@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+    <!-- Include Vue.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+
+<div id="app">
+    <h2>Registration Form</h2>
+    <form @submit.prevent="register">
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" v-model="username">
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" v-model="password">
+        </div>
+        <div>
+            <label for="matchingPassword">Confirm Password:</label>
+            <input type="password" id="matchingPassword" v-model="matchingPassword">
+        </div>
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" v-model="name">
+        </div>
+        <div>
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" v-model="phone">
+        </div>
+        <div>
+            <button type="submit">Register</button>
+        </div>
+    </form>
+    <p v-if="registered">Registration successful! Welcome, {{ name }}!</p>
+    <p v-if="hasError">Registration failed, please check your input!</p>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            username: '',
+            email: '',
+            password: '',
+            matchingPassword: '',
+            name: '',
+            phone: '',
+            registered: false,
+            hasError: false
+        },
+        methods: {
+            register: function() {
+                console.log({
+                    username: this.username,
+                    email: this.email,
+                    password: this.password,
+                    matchingPassword: this.matchingPassword,
+                    name: this.name
+                })
+
+                fetch("/api/register", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "username": this.username,
+                        "email": this.email,
+                        "password": this.password,
+                        "matchingPassword": this.matchingPassword,
+                        "name": this.name,
+                        "phoneNum": this.phone
+                    })
+                }).then(resp => {
+                    console.log(resp);
+                    if (!resp.ok) {
+                        this.hasError = true;
+                        throw new Error("error on backend, invalid input?");
+                    }
+                    return resp.json();
+                }).then(data => {
+                   console.log(data);
+                });
+
+                // Reset form fields
+                // this.username = '';
+                // this.email = '';
+                this.password = '';
+                this.matchingPassword = '';
+
+                // Mark registration as successful
+                this.registered = true;
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

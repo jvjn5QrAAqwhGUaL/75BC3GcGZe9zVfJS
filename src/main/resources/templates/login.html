@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Form</title>
+    <!-- Include Vue.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+
+<div id="app">
+    <h2>Login</h2>
+    <form @submit.prevent="login">
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" v-model="username">
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" v-model="password">
+        </div>
+        <div>
+            <button type="submit">Login</button>
+        </div>
+    </form>
+    <p v-if="errorMessage" style="color: red;">{{ errorMessage }}</p>
+    <p v-if="loggedIn">Login successful! Welcome, {{ username }}!</p>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            username: '',
+            password: '',
+            loggedIn: false,
+            errorMessage: ''
+        },
+        methods: {
+            login: function() {
+                // Make POST request to the login API
+                fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: this.username,
+                        password: this.password
+                    })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Login failed');
+                        }
+                        // Reset form fields
+                        this.username = '';
+                        this.password = '';
+                        this.loggedIn = true;
+                        this.errorMessage = '';
+                    })
+                    .catch(error => {
+                        this.errorMessage = 'Login failed. Please check your username and password.';
+                        console.error('Login error:', error);
+                    });
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
